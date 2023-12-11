@@ -1,0 +1,46 @@
+{
+  "name": "@kryptokrauts/event-processor-node-lib",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "dev-example": "env-cmd -f ./.env_local tsnd examples/atomicmarket.ts | npx pino-pretty --colorize",
+    "lint": "eslint --ignore-path .gitignore \"**/*.+(js|ts|tsx)\"",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|json|ts|tsx)\"",
+    "build": "tsc -p .",
+    "prepare": "yarn run build",
+    "prepublishOnly": "yarn run format",
+    "preversion": "yarn run lint",
+    "version": "yarn run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "author": "kryptokrauts",
+  "license": "MIT",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "6.13.2",
+    "@typescript-eslint/parser": "6.13.2",
+    "eslint": "8.55.0",
+    "pino-pretty": "10.2.3",
+    "prettier": "3.1.0",
+    "ts-node-dev": "2.0.0",
+    "typescript": "5.3.2"
+  },
+  "dependencies": {
+    "@blockmatic/eosio-ship-reader": "1.1.0",
+    "@types/node": "20.10.3",
+    "@types/node-fetch": "2.6.9",
+    "dotenv": "16.3.1",
+    "env-cmd": "10.1.0",
+    "kafkajs": "2.2.4",
+    "pino": "8.16.2"
+  },
+  "resolutions": {
+    "@eosrio/node-abieos": "2.1.1",
+    "rxjs": "6.6.7"
+  }
+}
