@@ -8,8 +8,8 @@
 - connect and listen to XPR Network based on [blockmatic/antelope-ship-reader](https://github.com/blockmatic/antelope-ship-reader)
   - start reading at resolved blocknum above
   - listening on user defined contract actions as well as forks
-	- provide a `handleAction `callback to implement message transformation
-	- transformed messages are automatically sent to the configured Kafka topic with a dedicated header `<message_prefix_header>.<action_name>`
+  - provide a `handleAction` callback to implement message transformation
+  - transformed messages are automatically sent to the configured Kafka topic with a dedicated header `<message_prefix_header>.<action_name>`
 
 In case of expected shutdown, a SIGTERM/SIGINT listener generates a dedicated `RestInfo` message on the output topic with the last processed blocknum from the ship reader. This allows a reset at this point in case no relevant block data was written to the output topic and thus omits the necessity of reading irrelevant / empty blocks again on restart (in case of bigger gaps).
 
