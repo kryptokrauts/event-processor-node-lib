@@ -1,0 +1,13 @@
+name: main
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '.gitignore'
+      - '.dockerignore'
+      - '.prettierignore'
+      - 'README.md'
+      - 'CHANGELOG.md'
+jobs:
+  validate:
+    uses: ./.github/workflows/_validate.yml
