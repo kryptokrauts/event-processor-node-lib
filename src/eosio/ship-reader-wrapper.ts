@@ -22,7 +22,7 @@ const error_types = ['unhandledRejection', 'uncaughtException'];
 //current finality is 3 minutes, with a new block every 0.5s -> 360 blocks
 const num_blocks_to_finality = 3 * 60 * 2;
 
-class ShipReaderWrapper {
+export class ShipReaderWrapper {
   config: ShipReaderWrapperConfig = undefined;
   forked: boolean = false;
   subscriptions = [];
@@ -284,5 +284,3 @@ class ShipReaderWrapper {
     });
   }
 }
-
-export = ShipReaderWrapper;

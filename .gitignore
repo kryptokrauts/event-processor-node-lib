@@ -2,3 +2,5 @@
 node_modules/
 dist/
 .lh/
+lib/
+*.tgz
