@@ -5,7 +5,7 @@ import {
   EosioReaderConfig,
 } from '@blockmatic/eosio-ship-reader';
 import { takeWhile } from 'rxjs/operators';
-import { EOSIO_CONFIG, getLogger, KAFKA_TOPIC_CONFIG } from '../common/config';
+import { EOSIO_CONFIG, getLogger, KAFKA_CONFIG, KAFKA_TOPIC_CONFIG } from '../common/config';
 import {
   ActionHandlerResult,
   delta_whitelist,
@@ -34,7 +34,6 @@ export class ShipReaderWrapper {
 
   constructor(config: ShipReaderWrapperConfig) {
     this.config = config;
-    this.kafka_wrapper = new KafkaWrapper({ header_prefix: config.message_header_prefix });
 
     // handle controlled os signals
     signal_traps.forEach(type => {
@@ -57,7 +56,16 @@ export class ShipReaderWrapper {
    * - providing them as Kafka message to subsequent processing
    */
   async startProcessing() {
+    // manual override for testing
+    logger.info('--- ship-reader-wrapper configuration ---');
+    logger.info(EOSIO_CONFIG);
+    logger.info(KAFKA_CONFIG);
+    logger.info(KAFKA_TOPIC_CONFIG);
+
     // connect to kafka and retrieve last processed message data
+
+    this.kafka_wrapper = new KafkaWrapper({ header_prefix: this.config.message_header_prefix });
+
     const { last_blocknum: last_blocknum, type } = await this.kafka_wrapper.connect();
 
     if (last_blocknum) {
@@ -98,7 +106,12 @@ export class ShipReaderWrapper {
       logger.warn(
         `Received fork event ${forkBlock}, preparing for reset at block ${this.last_irreversible_block}`,
       );
-      const resetEvent: string = this.createResetEvent('fork', this.last_irreversible_block, true);
+      const resetEvent: string = this.createResetEvent(
+        'fork',
+        `fork occurred at block ${forkBlock}`,
+        this.last_irreversible_block,
+        true,
+      );
 
       logger.warn(
         `Emitting new ResetEvent to contract topic ${KAFKA_TOPIC_CONFIG.contract_topic}: %o`,
@@ -135,6 +148,8 @@ export class ShipReaderWrapper {
     // subscribe to incoming blocks event
     this.subscriptions.push(
       blocks$.pipe<EosioReaderBlock>(takeWhile(() => !this.forked)).subscribe(async block => {
+        logger.trace(`Current block ${this.current_block}`);
+
         let syncStateCheckInterval: number = 10 * num_blocks_to_finality;
         if (logger.isLevelEnabled('trace')) {
           syncStateCheckInterval = num_blocks_to_finality;
@@ -147,16 +162,35 @@ export class ShipReaderWrapper {
 
         if (block.actions?.length > 0) {
           for (const action of block.actions) {
-            try {
-              const result: ActionHandlerResult = this.config.action_handler({
-                eosio_reader_action: action,
-                blocknum: block.block_num,
-                timestamp: block.timestamp,
-              });
-              result && (await this.kafka_wrapper.sendEvent(result.msg, result.action_type));
-            } catch (err) {
-              logger.error(err);
-              await this.gracefulShutdown();
+            // only handle if block contains action data
+            if (action && action.data) {
+              try {
+                const result: ActionHandlerResult = this.config.action_handler({
+                  eosio_reader_action: action,
+                  blocknum: block.block_num,
+                });
+
+                // if a processing error occurs - throw and kill process
+                if (result && result.error) {
+                  throw result.error;
+                }
+                // otherwise check if the result contains a msg, msg undefined means ingore
+                if (result && result.msg) {
+                  const msg = JSON.stringify({
+                    blocknum: block.block_num,
+                    timestamp: block.timestamp,
+                    type: action.name,
+                    transaction_id: action.transaction_id,
+                    data: result.msg,
+                  });
+                  await this.kafka_wrapper.sendEvent(msg, action.name);
+                } else {
+                  logger.trace(`Ignoring empty action block`);
+                }
+              } catch (err) {
+                logger.error(err, `Error occurred handling message of type ${action.name}`);
+                this.sendEventAndEndProcess(`handle_message_${action.name}`, err);
+              }
             }
           }
         }
@@ -206,8 +240,8 @@ export class ShipReaderWrapper {
     };
 
     const eosioReaderConfig: EosioReaderConfig = {
-      ws_url: process.env.EOSIO_SHIP_API,
-      rpc_url: process.env.EOSIO_NODE_API,
+      ws_url: EOSIO_CONFIG.eosio_ship_api,
+      rpc_url: EOSIO_CONFIG.eosio_node_api,
       ds_threads: 6,
       ds_experimental: false,
       delta_whitelist: delta_whitelist,
@@ -247,6 +281,7 @@ export class ShipReaderWrapper {
    */
   private createResetEvent(
     reset_type: string,
+    details: string,
     restart_at_block: number,
     clean_database: boolean,
   ): string {
@@ -254,6 +289,7 @@ export class ShipReaderWrapper {
       const resetEvent: ResetEvent = {
         reset_type,
         timestamp: Date.now().toString(),
+        details,
         clean_database,
         reset_blocknum: this.current_block,
         restart_at_block,
@@ -273,14 +309,28 @@ export class ShipReaderWrapper {
    */
   private handleEvent(type: string) {
     process.once(type, async () => {
-      try {
-        logger.warn(`Catched event ${type}, creating reset event for restart`);
-        const resetEvent: string = this.createResetEvent('interrupted', this.current_block, false);
-        resetEvent && (await this.kafka_wrapper.sendEvent(resetEvent, 'reset_event'));
-        await this.gracefulShutdown();
-      } finally {
-        process.kill(process.pid, type);
-      }
+      await this.sendEventAndEndProcess(type, undefined);
     });
+  }
+
+  /**
+   * send the shutdown message to Kafka and kill the process
+   * @param type type of interruption event
+   * @param err error in for additional details
+   */
+  private async sendEventAndEndProcess(type: string, err: any) {
+    try {
+      logger.warn(`Catched event ${type} with err ${err}, creating reset event for restart`);
+      const resetEvent: string = this.createResetEvent(
+        'interrupted',
+        `caused by ${type}${err ? ': ' + err : ''}`,
+        this.current_block,
+        false,
+      );
+      resetEvent && (await this.kafka_wrapper.sendEvent(resetEvent, 'reset_event'));
+      await this.gracefulShutdown();
+    } finally {
+      process.kill(process.pid, type);
+    }
   }
 }

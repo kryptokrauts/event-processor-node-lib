@@ -17,6 +17,8 @@ export interface ResetInfo {
 export interface ResetEvent {
   // type of event, can be fork or manual reset
   reset_type: string;
+  // more details to the reset_type
+  details: string;
   // timestamp, reset event occurred
   timestamp: string;
   // the block to restart from on the next run
@@ -37,12 +39,11 @@ export interface ShipReaderWrapperConfig {
 export interface ActionData {
   eosio_reader_action: EosioReaderAction;
   blocknum: number;
-  timestamp: string;
 }
 
 export interface ActionHandlerResult {
-  msg: string;
-  action_type: string;
+  msg: any;
+  error: Error | undefined;
 }
 
 export const delta_whitelist: () => ShipTableDeltaName[] = () => [
