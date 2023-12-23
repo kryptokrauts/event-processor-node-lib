@@ -6,7 +6,8 @@ dotenv.config();
 
 export const EOSIO_CONFIG = {
   start_block: Number(process.env.EOSIO_START_BLOCK),
-  log_head_diff: Boolean(process.env.EOSIO_LOG_HEAD_DIFF),
+  eosio_node_api: process.env.EOSIO_NODE_API,
+  eosio_ship_api: process.env.EOSIO_SHIP_API,
 };
 
 export const KAFKA_CONFIG: KafkaConfig = {
