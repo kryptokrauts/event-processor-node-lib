@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev-example": "env-cmd -f ./.env_local tsnd examples/atomicmarket.ts | npx pino-pretty --colorize",
-    "lint": "eslint --ignore-path .gitignore \"**/*.+(js|ts|tsx)\"",
+    "lint": "eslint --ignore-path .eslintignore \"**/*.+(js|ts|tsx)\"",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|json|ts|tsx)\"",
     "format:check": "prettier -c .",
     "typecheck": "tsc --noEmit --incremental false",

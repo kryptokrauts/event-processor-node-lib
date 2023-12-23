@@ -318,7 +318,7 @@ export class ShipReaderWrapper {
    * @param type type of interruption event
    * @param err error in for additional details
    */
-  private async sendEventAndEndProcess(type: string, err: any) {
+  private async sendEventAndEndProcess(type: string, err: unknown) {
     try {
       logger.warn(`Catched event ${type} with err ${err}, creating reset event for restart`);
       const resetEvent: string = this.createResetEvent(

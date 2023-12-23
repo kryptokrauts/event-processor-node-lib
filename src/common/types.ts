@@ -42,7 +42,7 @@ export interface ActionData {
 }
 
 export interface ActionHandlerResult {
-  msg: any;
+  msg: unknown;
   error: Error | undefined;
 }
 
