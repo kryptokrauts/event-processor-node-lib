@@ -178,7 +178,7 @@ export class ShipReaderWrapper {
                 if (result && result.msg) {
                   const msg = JSON.stringify({
                     blocknum: block.block_num,
-                    timestamp: block.timestamp,
+                    timestamp: new Date(block.timestamp).getTime(),
                     type: action.name,
                     transaction_id: action.transaction_id,
                     data: result.msg,
