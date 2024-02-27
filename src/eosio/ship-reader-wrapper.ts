@@ -182,6 +182,7 @@ export class ShipReaderWrapper {
                     type: action.name,
                     transaction_id: action.transaction_id,
                     data: result.msg,
+                    global_sequence: action.global_sequence,
                   });
                   await this.kafka_wrapper.sendEvent(msg, action.name);
                 } else {
