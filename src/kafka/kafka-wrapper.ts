@@ -40,7 +40,7 @@ class KafkaWrapper {
       logger.debug(`Fetching offset for contract topic ${KAFKA_TOPIC_CONFIG.contract_topic}`);
 
       // if offset for contract topic exists
-      if (topicOffsets && topicOffsets.length === 1 && Number(topicOffsets[0]) > 0) {
+      if (topicOffsets && topicOffsets.length === 1 && Number(topicOffsets[0].offset) > 0) {
         // get the current offset and decrease by 1
         const seekEntry: SeekEntry = topicOffsets[0];
         const offset = Number(seekEntry.offset) - 1;
