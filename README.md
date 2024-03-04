@@ -32,6 +32,7 @@ const wrapper: ShipReaderWrapper = new ShipReaderWrapper({
 	message_header_prefix: 'atomicmarket',
 	table_rows_whitelist: table_rows_whitelist,
 	action_handler: handleAction,
+	only_irreversible_blocks: false
 });
 wrapper.startProcessing();
 ```
