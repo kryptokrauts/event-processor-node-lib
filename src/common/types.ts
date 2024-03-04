@@ -29,11 +29,21 @@ export interface ResetEvent {
   clean_database: boolean;
 }
 
+export interface NodeSyncStatusEvent {
+  timestamp: number;
+  head_block: number;
+  current_block: number;
+  diff: number;
+  in_sync: boolean;
+  current_sync_date: string;
+}
+
 export interface ShipReaderWrapperConfig {
   action_handler: (data: ActionData) => ActionHandlerResult;
   message_header_prefix: string;
   table_rows_whitelist: () => EosioReaderTableRowFilter[];
   actions_whitelist: () => EosioReaderActionFilter[];
+  only_irreversible_blocks: boolean;
 }
 
 export interface ActionData {

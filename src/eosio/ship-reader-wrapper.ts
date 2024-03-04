@@ -9,6 +9,7 @@ import { EOSIO_CONFIG, getLogger, KAFKA_CONFIG, KAFKA_TOPIC_CONFIG } from '../co
 import {
   ActionHandlerResult,
   delta_whitelist,
+  NodeSyncStatusEvent,
   ResetEvent,
   ShipReaderWrapperConfig,
 } from '../common/types';
@@ -83,7 +84,7 @@ export class ShipReaderWrapper {
 
     if (this.start_block !== -1) {
       this.current_block = this.start_block;
-      this.checkReaderSyncState(this.start_block);
+      this.checkReaderSyncState(this.start_block, undefined);
 
       // start listening to XPR Network node
       this.startShipReader();
@@ -157,7 +158,7 @@ export class ShipReaderWrapper {
 
         // since replaying blocks is much faster, check within greater block-span
         if (!this.reader_in_sync && block.block_num % syncStateCheckInterval === 0) {
-          this.checkReaderSyncState(block.block_num);
+          this.checkReaderSyncState(block.block_num, block.timestamp);
         }
 
         if (block.actions?.length > 0) {
@@ -209,7 +210,10 @@ export class ShipReaderWrapper {
     );
   }
 
-  private async checkReaderSyncState(current_block: number): Promise<void> {
+  private async checkReaderSyncState(
+    current_block: number,
+    current_block_timestamp: string,
+  ): Promise<void> {
     const head_block = Number(await getHeadBlockNum());
     const head_diff = head_block - current_block;
     this.reader_in_sync = head_diff - num_blocks_to_finality <= 0;
@@ -219,6 +223,16 @@ export class ShipReaderWrapper {
     } else {
       logger.info(`Reader is at block height ${current_block}, diff to head is ${head_diff}`);
     }
+
+    await this.kafka_wrapper.sendEvent(
+      this.createNodeSyncStatusEvent(
+        head_block,
+        current_block,
+        current_block_timestamp,
+        this.reader_in_sync,
+      ),
+      'node_sync_status_event',
+    );
   }
 
   /**
@@ -227,6 +241,10 @@ export class ShipReaderWrapper {
    * @returns
    */
   private async getShipReader() {
+    if (this.config.only_irreversible_blocks) {
+      logger.info(`Configuration is set to fetch irreversible blocks only`);
+    }
+
     const uniqueContractNames = [
       ...new Set(this.config.table_rows_whitelist().map(row => row.code)),
     ];
@@ -254,7 +272,7 @@ export class ShipReaderWrapper {
         end_block_num: 0xffffffff,
         max_messages_in_flight: 50,
         have_positions: [],
-        irreversible_only: false,
+        irreversible_only: this.config.only_irreversible_blocks,
         fetch_block: true,
         fetch_traces: true,
         fetch_deltas: true,
@@ -298,6 +316,30 @@ export class ShipReaderWrapper {
       return JSON.stringify(resetEvent);
     }
     return undefined;
+  }
+
+  /**
+   * Create a node sync status event
+   * @param reset_type
+   * @param restart_at_block
+   * @param clean_database
+   * @returns
+   */
+  private createNodeSyncStatusEvent(
+    head_block: number,
+    current_block: number,
+    current_block_timestamp: string,
+    in_sync: boolean,
+  ): string {
+    const nodeSyncStatusEvent: NodeSyncStatusEvent = {
+      timestamp: Date.now(),
+      head_block,
+      current_block,
+      diff: head_block - current_block,
+      in_sync,
+      current_sync_date: current_block_timestamp,
+    };
+    return JSON.stringify(nodeSyncStatusEvent);
   }
 
   /**
