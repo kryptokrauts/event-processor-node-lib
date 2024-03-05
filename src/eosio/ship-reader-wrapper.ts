@@ -151,13 +151,13 @@ export class ShipReaderWrapper {
       blocks$.pipe<EosioReaderBlock>(takeWhile(() => !this.forked)).subscribe(async block => {
         logger.trace(`Current block ${this.current_block}`);
 
+        // since replaying blocks is much faster, check within greater block-span
         let syncStateCheckInterval: number = 10 * num_blocks_to_finality;
-        if (logger.isLevelEnabled('trace')) {
+        if (logger.isLevelEnabled('trace') || this.reader_in_sync) {
           syncStateCheckInterval = num_blocks_to_finality;
         }
 
-        // since replaying blocks is much faster, check within greater block-span
-        if (!this.reader_in_sync && block.block_num % syncStateCheckInterval === 0) {
+        if (block.block_num % syncStateCheckInterval === 0) {
           this.checkReaderSyncState(block.block_num, block.timestamp);
         }
 
