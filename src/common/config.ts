@@ -4,6 +4,8 @@ import { Logger, pino } from 'pino';
 
 dotenv.config();
 
+export const control_api_port = process.env.PORT || 8000;
+
 export const EOSIO_CONFIG = {
   start_block: Number(process.env.EOSIO_START_BLOCK),
   eosio_node_api: process.env.EOSIO_NODE_API,
