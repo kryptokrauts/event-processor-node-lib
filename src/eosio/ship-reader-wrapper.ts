@@ -65,7 +65,7 @@ export class ShipReaderWrapper {
     logger.info(KAFKA_TOPIC_CONFIG);
 
     // start control api for sending reset message
-    startControlApi(this.handleExternalReset);
+    startControlApi(this.handleExternalReset, this);
 
     // connect to kafka and retrieve last processed message data
     this.kafka_wrapper = new KafkaWrapper({ header_prefix: this.config.message_header_prefix });
@@ -380,19 +380,25 @@ export class ShipReaderWrapper {
     }
   }
 
+  /**
+   * send external reset message
+   * @param restart_at_block
+   * @param reset_db
+   */
   private async handleExternalReset(restart_at_block: number, reset_db: boolean) {
     try {
       logger.warn(`Got external reset event to restart at blockum ${restart_at_block}`);
       const resetEvent: string = this.createResetEvent(
-        'external_restart',
+        'external_blocknum_reset',
         `caused by control api call`,
         restart_at_block,
         reset_db,
       );
       resetEvent && (await this.kafka_wrapper.sendEvent(resetEvent, 'reset_event'));
       await this.gracefulShutdown();
-    } finally {
-      process.kill(process.pid, -1);
+    } catch (e) {
+      logger.error(e);
+      this.sendEventAndEndProcess('handle external reset', e);
     }
   }
 }

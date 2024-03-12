@@ -4,7 +4,7 @@ import { control_api_port, getLogger } from './common/config';
 const api = express();
 const logger = getLogger('reset-api');
 
-export async function startControlApi(reset_handler) {
+export async function startControlApi(reset_handler, instance) {
   api.get('/reset', (request, response) => {
     const restart_at_block = request.query.blocknum;
     const reset_database = request.query.reset_db || false;
@@ -15,7 +15,7 @@ export async function startControlApi(reset_handler) {
       logger.info(
         `Parameters provided: blocknum: ${restart_at_block}, reset_db: ${reset_database}`,
       );
-      reset_handler(restart_at_block, reset_database);
+      reset_handler.call(instance, restart_at_block, reset_database);
       response
         .status(200)
         .send(
