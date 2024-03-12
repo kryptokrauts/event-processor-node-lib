@@ -4,3 +4,4 @@ dist/
 .lh/
 lib/
 *.tgz
+.env_local*
