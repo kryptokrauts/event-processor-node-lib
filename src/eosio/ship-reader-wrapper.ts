@@ -13,6 +13,7 @@ import {
   ResetEvent,
   ShipReaderWrapperConfig,
 } from '../common/types';
+import { startControlApi } from '../control-api';
 import KafkaWrapper from '../kafka/kafka-wrapper';
 import { fetchAbi, getHeadBlockNum } from './chain-api';
 
@@ -63,8 +64,10 @@ export class ShipReaderWrapper {
     logger.info(KAFKA_CONFIG);
     logger.info(KAFKA_TOPIC_CONFIG);
 
-    // connect to kafka and retrieve last processed message data
+    // start control api for sending reset message
+    startControlApi(this.handleExternalReset);
 
+    // connect to kafka and retrieve last processed message data
     this.kafka_wrapper = new KafkaWrapper({ header_prefix: this.config.message_header_prefix });
 
     const { last_blocknum: last_blocknum, type } = await this.kafka_wrapper.connect();
@@ -374,6 +377,22 @@ export class ShipReaderWrapper {
       await this.gracefulShutdown();
     } finally {
       process.kill(process.pid, type);
+    }
+  }
+
+  private async handleExternalReset(restart_at_block: number, reset_db: boolean) {
+    try {
+      logger.warn(`Got external reset event to restart at blockum ${restart_at_block}`);
+      const resetEvent: string = this.createResetEvent(
+        'external_restart',
+        `caused by control api call`,
+        restart_at_block,
+        reset_db,
+      );
+      resetEvent && (await this.kafka_wrapper.sendEvent(resetEvent, 'reset_event'));
+      await this.gracefulShutdown();
+    } finally {
+      process.kill(process.pid, -1);
     }
   }
 }
