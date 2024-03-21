@@ -264,7 +264,7 @@ export class ShipReaderWrapper {
     const eosioReaderConfig: EosioReaderConfig = {
       ws_url: EOSIO_CONFIG.eosio_ship_api,
       rpc_url: EOSIO_CONFIG.eosio_node_api,
-      ds_threads: 6,
+      ds_threads: EOSIO_CONFIG.ds_threads,
       ds_experimental: false,
       delta_whitelist: delta_whitelist,
       table_rows_whitelist: this.config.table_rows_whitelist,
