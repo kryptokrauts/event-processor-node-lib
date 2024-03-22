@@ -1,6 +1,6 @@
 {
   "name": "@kryptokrauts/event-processor-node-lib",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Wrapper for ease listening on antelope blockchain based on @blockmatic/antelope-ship-reader",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

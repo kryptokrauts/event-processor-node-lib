@@ -79,7 +79,10 @@ class KafkaWrapper {
               const resetInfo = {
                 // either it is a "regular" message or a fork event
                 // in case it was a "regular" message, take last blocknum and increase by 1, since the last blocknum was successfully processed
-                last_blocknum: Number(messageJSON.blocknum) + 1 || messageJSON.restart_at_block,
+                last_blocknum:
+                  Number(messageJSON.blocknum) + 1 ||
+                  messageJSON.restart_at_block ||
+                  messageJSON.current_block,
                 type: messageJSON.reset_type || 'restart',
               };
               logger.info(
