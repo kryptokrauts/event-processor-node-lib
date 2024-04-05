@@ -273,12 +273,12 @@ export class ShipReaderWrapper {
       request: {
         start_block_num: this.start_block,
         end_block_num: 0xffffffff,
-        max_messages_in_flight: 50,
+        max_messages_in_flight: EOSIO_CONFIG.max_messages_in_flight,
         have_positions: [],
         irreversible_only: this.config.only_irreversible_blocks,
-        fetch_block: true,
-        fetch_traces: true,
-        fetch_deltas: true,
+        fetch_block: EOSIO_CONFIG.fetch_block,
+        fetch_traces: EOSIO_CONFIG.fetch_traces,
+        fetch_deltas: EOSIO_CONFIG.fetch_deltas,
       },
       auto_start: true,
     };

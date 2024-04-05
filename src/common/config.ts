@@ -11,6 +11,10 @@ export const EOSIO_CONFIG = {
   eosio_node_api: process.env.EOSIO_NODE_API,
   eosio_ship_api: process.env.EOSIO_SHIP_API,
   ds_threads: Number(process.env.EOSIO_DS_THREADS || 4),
+  max_messages_in_flight: Number(process.env.EOSIO_MAX_MESSAGES_IN_FLIGHT || 50),
+  fetch_block: process.env.EOSIO_FETCH_BLOCK !== 'false',
+  fetch_traces: process.env.EOSIO_FETCH_TRACES !== 'false',
+  fetch_deltas: process.env.EOSIO_FETCH_DELTAS !== 'false',
 };
 
 export const KAFKA_CONFIG: KafkaConfig = {
