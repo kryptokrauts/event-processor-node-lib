@@ -5,6 +5,7 @@ import { Logger, pino } from 'pino';
 dotenv.config();
 
 export const control_api_port = process.env.PORT || 8000;
+export const sync_message_block_interval = Number(process.env.SYNC_MESSAGE_BLOCK_INTERVAL || 60);
 
 export const EOSIO_CONFIG = {
   start_block: Number(process.env.EOSIO_START_BLOCK),
@@ -15,6 +16,7 @@ export const EOSIO_CONFIG = {
   fetch_block: process.env.EOSIO_FETCH_BLOCK !== 'false',
   fetch_traces: process.env.EOSIO_FETCH_TRACES !== 'false',
   fetch_deltas: process.env.EOSIO_FETCH_DELTAS !== 'false',
+  num_blocks_to_finality: Number(process.env.EOSIO_NUM_BLOCKS_TO_FINALITY || 180),
 };
 
 export const KAFKA_CONFIG: KafkaConfig = {
