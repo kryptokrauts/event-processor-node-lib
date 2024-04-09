@@ -161,6 +161,7 @@ export class ShipReaderWrapper {
           await this.kafka_wrapper.sendEvent(
             JSON.stringify({
               blocknum: block.block_num,
+              timestamp: block.timestamp,
             }),
             'current_block',
           );
