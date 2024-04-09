@@ -1,6 +1,6 @@
 {
   "name": "@kryptokrauts/event-processor-node-lib",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Wrapper for ease listening on antelope blockchain based on @blockmatic/antelope-ship-reader",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,6 +11,8 @@
   "scripts": {
     "dev-aa": "env-cmd -f ./.env_local tsnd examples/atomicassets.ts | npx pino-pretty --colorize",
     "dev-am": "env-cmd -f ./.env_local_am tsnd examples/atomicmarket.ts | npx pino-pretty --colorize",
+    "dev-service": "env-cmd -f ./.env_local_service tsnd examples/service.ts | npx pino-pretty --colorize",
+    "dev-audit": "env-cmd -f ./.env_local_audit tsnd examples/audit.ts | npx pino-pretty --colorize",
     "lint": "eslint --ignore-path .eslintignore \"**/*.+(js|ts|tsx)\"",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|json|ts|tsx)\"",
     "format:check": "prettier -c .",

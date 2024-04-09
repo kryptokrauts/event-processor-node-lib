@@ -5,7 +5,13 @@ import {
   EosioReaderConfig,
 } from '@blockmatic/eosio-ship-reader';
 import { takeWhile } from 'rxjs/operators';
-import { EOSIO_CONFIG, getLogger, KAFKA_CONFIG, KAFKA_TOPIC_CONFIG } from '../common/config';
+import {
+  EOSIO_CONFIG,
+  getLogger,
+  KAFKA_CONFIG,
+  KAFKA_TOPIC_CONFIG,
+  sync_message_block_interval,
+} from '../common/config';
 import {
   ActionHandlerResult,
   delta_whitelist,
@@ -20,9 +26,6 @@ import { fetchAbi, getHeadBlockNum } from './chain-api';
 const logger = getLogger('ship-reader-wrapper');
 const signal_traps = ['SIGTERM', 'SIGINT', 'SIGUSR2'];
 const error_types = ['unhandledRejection', 'uncaughtException'];
-
-//current finality is 3 minutes, with a new block every 0.5s -> 360 blocks
-const num_blocks_to_finality = 3 * 60 * 2;
 
 export class ShipReaderWrapper {
   config: ShipReaderWrapperConfig = undefined;
@@ -155,9 +158,9 @@ export class ShipReaderWrapper {
         logger.trace(`Current block ${this.current_block}`);
 
         // since replaying blocks is much faster, check within greater block-span
-        let syncStateCheckInterval: number = 10 * num_blocks_to_finality;
+        let syncStateCheckInterval: number = 10 * sync_message_block_interval;
         if (logger.isLevelEnabled('trace') || this.reader_in_sync) {
-          syncStateCheckInterval = num_blocks_to_finality;
+          syncStateCheckInterval = sync_message_block_interval;
         }
 
         if (block.block_num % syncStateCheckInterval === 0) {
@@ -219,7 +222,7 @@ export class ShipReaderWrapper {
   ): Promise<void> {
     const head_block = Number(await getHeadBlockNum());
     const head_diff = head_block - current_block;
-    this.reader_in_sync = head_diff - num_blocks_to_finality <= 0;
+    this.reader_in_sync = head_diff - EOSIO_CONFIG.num_blocks_to_finality <= 0;
 
     if (this.reader_in_sync) {
       logger.info('Reader is in sync with current block height');
