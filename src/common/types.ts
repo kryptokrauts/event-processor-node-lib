@@ -44,6 +44,7 @@ export interface ShipReaderWrapperConfig {
   table_rows_whitelist: () => EosioReaderTableRowFilter[];
   actions_whitelist: () => EosioReaderActionFilter[];
   only_irreversible_blocks: boolean;
+  emit_current_blocknum: boolean;
 }
 
 export interface ActionData {

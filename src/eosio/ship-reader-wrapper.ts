@@ -155,7 +155,16 @@ export class ShipReaderWrapper {
     // subscribe to incoming blocks event
     this.subscriptions.push(
       blocks$.pipe<EosioReaderBlock>(takeWhile(() => !this.forked)).subscribe(async block => {
-        logger.trace(`Current block ${this.current_block}`);
+        logger.trace(`Current block ${block.block_num}`);
+
+        if (this.config.emit_current_blocknum) {
+          await this.kafka_wrapper.sendEvent(
+            JSON.stringify({
+              blocknum: block.block_num,
+            }),
+            'current_block',
+          );
+        }
 
         // since replaying blocks is much faster, check within greater block-span
         let syncStateCheckInterval: number = 10 * sync_message_block_interval;
