@@ -43,7 +43,6 @@ export interface ShipReaderWrapperConfig {
   message_header_prefix: string;
   table_rows_whitelist: () => EosioReaderTableRowFilter[];
   actions_whitelist: () => EosioReaderActionFilter[];
-  only_irreversible_blocks: boolean;
   emit_current_blocknum: boolean;
 }
 

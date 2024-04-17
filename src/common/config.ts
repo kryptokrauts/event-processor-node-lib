@@ -17,6 +17,7 @@ export const EOSIO_CONFIG = {
   fetch_traces: process.env.EOSIO_FETCH_TRACES !== 'false',
   fetch_deltas: process.env.EOSIO_FETCH_DELTAS !== 'false',
   num_blocks_to_finality: Number(process.env.EOSIO_NUM_BLOCKS_TO_FINALITY || 360),
+  irreversible_blocks_only: process.env.EOSIO_IRREVERSIBLE_BLOCKS_ONLY === 'true',
 };
 
 export const KAFKA_CONFIG: KafkaConfig = {
