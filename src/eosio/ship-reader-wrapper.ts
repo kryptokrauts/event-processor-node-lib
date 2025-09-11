@@ -25,7 +25,6 @@ import { fetchAbi, getHeadBlockNum } from './chain-api';
 
 const logger = getLogger('ship-reader-wrapper');
 const signal_traps = ['SIGTERM', 'SIGINT', 'SIGUSR2'];
-const error_types = ['unhandledRejection', 'uncaughtException'];
 
 export class ShipReaderWrapper {
   config: ShipReaderWrapperConfig = undefined;
@@ -46,9 +45,10 @@ export class ShipReaderWrapper {
     });
 
     // handle unexpected error
-    error_types.forEach(type => {
-      this.handleEvent(type);
-    });
+    process.on('unhandledRejection', reason =>
+      this.sendEventAndEndProcess('unhandledRejection', reason),
+    );
+    process.on('uncaughtException', err => this.sendEventAndEndProcess('uncaughtException', err));
   }
 
   /**
@@ -389,7 +389,12 @@ export class ShipReaderWrapper {
       resetEvent && (await this.kafka_wrapper.sendEvent(resetEvent, 'reset_event'));
       await this.gracefulShutdown();
     } finally {
-      process.kill(process.pid, type);
+      const isSignal = ['SIGTERM', 'SIGINT', 'SIGUSR2'].includes(type);
+      if (isSignal) {
+        process.kill(process.pid, type as NodeJS.Signals);
+      } else {
+        process.exit(1);
+      }
     }
   }
 
